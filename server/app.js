@@ -29,15 +29,15 @@ mongoose.connect(dbURL, mongooseOptions, (err) => {
 });
 
 // Local redis var
-// let redisURL = {
-//   hostname: 'redis-15969.c9.us-east-1-2.ec2.cloud.redislabs.com',
-//   port: 15969,
-// };
-
 let redisURL = {
-  hostname: 'redis://rediscloud:Nt6uYLuatF5FTIrhpMRpvw9bHGwOjnwG@redis-10076.c52.us-east-1-4.ec2.cloud.redislabs.com',
-  port: 10076,
+  hostname: 'redis-15969.c9.us-east-1-2.ec2.cloud.redislabs.com',
+  port: 15969,
 };
+
+// let redisURL = {
+//   hostname: 'redis://rediscloud:Nt6uYLuatF5FTIrhpMRpvw9bHGwOjnwG@redis-10076.c52.us-east-1-4.ec2.cloud.redislabs.com',
+//   port: 10076,
+// };
 
 let redisPASS = 'R7Ixr8hncZuBOEO4NRWNOCU4XlAlZPe3';
 if (process.env.REDISCLOUD_URL) {
@@ -54,6 +54,10 @@ const redisClient = redis.createClient({
 const router = require('./router.js');
 
 const app = express();
+
+// var http = require(‘http’).Server(app);
+// var io = require(‘socket.io’)(http);
+
 app.use('/assets', express.static(path.resolve(`${__dirname}/../hosted/`)));
 app.use(favicon(`${__dirname}/../hosted/img/favicon.png`));
 app.disable('x-powered-by');
