@@ -17,6 +17,7 @@ let canvas,ctx,dragging=false,lineWidth,strokeStyle;
   let fillStyle;
   let origin;
 
+  //canvases for drawing & displaying
   let topCanvas;
   let topCtx;
   let word

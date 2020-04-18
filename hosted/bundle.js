@@ -17,7 +17,8 @@ var TOOL_CIRCLE = "toolCircle";
 var TOOL_LINE = "toolLine";
 var currentTool;
 var fillStyle;
-var origin;
+var origin; //canvases for drawing & displaying
+
 var topCanvas;
 var topCtx;
 var word;
