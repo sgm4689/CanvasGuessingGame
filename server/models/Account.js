@@ -85,7 +85,7 @@ AccountSchema.statics.updatePass = (username, password, callback) => {
   let search = {username: username};
   let update = {password: password};
 
-  let doc = AccountModel.findOneAndUpdate(search, update, (err, result) =>{
+  let doc = AccountModel.findOneAndUpdate(search, update, (err) =>{
     if (err) {
        return callback(err);
     } else {
