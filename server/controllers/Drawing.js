@@ -8,6 +8,11 @@ const makerPage = (req, res) => res.render('app', {
   csrfToken: req.csrfToken(),
 });
 
+const profilePage = (req, res) => res.render('profile', {
+  csrfToken: req.csrfToken(),
+  username: req.session.account.username,
+});
+
 const makeDrawing = (req, res) => {
   if (!req.body.img) {
     return res.status(404).json({
@@ -25,17 +30,11 @@ const makeDrawing = (req, res) => {
   const DrawingPromise = newDrawing.save();
 
   DrawingPromise.then(() => res.json({
-    redirect: '/maker',
+    redirect: '/profile',
   }));
 
   DrawingPromise.catch((err) => {
     console.log(err);
-    if (err.code === 11000) {
-      return res.status(400).json({
-        error: 'Drawing already exists',
-      });
-    }
-
     return res.status(400).json({
       error: 'An error occured',
     });
@@ -54,7 +53,6 @@ const getDrawings = (request, response) => {
         error: 'An error occured',
       });
     }
-
     return res.json({
       Drawings: docs,
     });
@@ -62,5 +60,7 @@ const getDrawings = (request, response) => {
 };
 
 module.exports.makerPage = makerPage;
+module.exports.profilePage = profilePage;
 module.exports.make = makeDrawing;
+module.exports.images = getDrawings;
 module.exports.getDrawings = getDrawings;

@@ -92,7 +92,7 @@ nav:nth-child(1) {
     background-color: #338acc;
 }
 
-#user, #pass, #pass2 {
+#user, #pass, #pass2, #oldPass {
     text-align: center;
     font-size: 1.1em;
     width: 180px;
@@ -153,8 +153,8 @@ body {
  #controls {
    position: absolute;
     z-index: 2;
-   left: 40px;
-   top: 40px;
+   left: 55px;
+   top: 65px;
    width: 600px;
 }
 

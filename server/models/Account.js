@@ -81,6 +81,22 @@ AccountSchema.statics.authenticate = (username, password, callback) => {
   });
 };
 
+AccountSchema.statics.updatePass = (username, password, callback) => {
+  const account = { username }; const
+    newPass = { password };
+  AccountModel.updateOne(account, newPass, (err, doc) => {
+    if (err) {
+      return callback(err);
+    }
+
+    if (!doc) {
+      return callback();
+    }
+
+    return callback(null, doc);
+  });
+};
+
 AccountModel = mongoose.model('Account', AccountSchema);
 
 module.exports.AccountModel = AccountModel;

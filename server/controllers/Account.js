@@ -39,8 +39,16 @@ const login = (request, response) => {
     req.session.account = Account.AccountModel.toAPI(account);
 
     return res.json({
-      redirect: '/maker',
+      redirect: '/profile',
     });
+  });
+};
+
+const connect = (request, response) => {
+  const res = response;
+
+  return res.json({
+    redirect: '/maker',
   });
 };
 
@@ -79,7 +87,7 @@ const signup = (request, response) => {
     savePromise.then(() => {
       req.session.account = Account.AccountModel.toAPI(newAccount);
       return res.json({
-        redirect: 'maker',
+        redirect: 'profile',
       });
     });
 
@@ -99,6 +107,44 @@ const signup = (request, response) => {
   });
 };
 
+const changePass = (request, response) => {
+  const req = request;
+  const res = response;
+
+  // string casting
+  req.body.newPass = `${req.body.oldPass}`;
+  req.body.pass = `${req.body.pass}`;
+  req.body.pass2 = `${req.body.pass2}`;
+
+  if (!req.body.oldPass || !req.body.pass || !req.body.pass2) {
+    return res.status(400).json({
+      error: 'All fields are required',
+    });
+  }
+
+  if (req.body.pass !== req.body.pass2) {
+    return res.status(400).json({
+      error: 'Passwords do not match',
+    });
+  }
+
+  return Account.AccountModel.authenticate(
+    req.session.account.username,
+    req.body.oldPass,
+    (err, account) => {
+      if (err || !account) {
+        return res.status(401).json({
+          error: 'Wrong username or password',
+        });
+      }
+
+      return res.json({
+        redirect: '/profile',
+      });
+    },
+  );
+};
+
 const getToken = (request, response) => {
   const req = request;
   const res = response;
@@ -111,6 +157,8 @@ const getToken = (request, response) => {
 };
 
 module.exports.loginPage = loginPage;
+module.exports.changePass = changePass;
+module.exports.connect = connect;
 module.exports.login = login;
 module.exports.logout = logout;
 module.exports.signup = signup;

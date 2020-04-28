@@ -20,16 +20,16 @@ let canvas,ctx,dragging=false,lineWidth,strokeStyle;
   //canvases for drawing & displaying
   let topCanvas;
   let topCtx;
-  let word
+  let word;
 
-const setup = (csrf) =>{
+const setup2 = () =>{
   getWord();
 };
 
-const getToken = () => {
+const getToken2 = () => {
   sendAjax('GET', '/getToken', null, (result) => {
     token = result.csrfToken;
-    setup(token);
+    setup2();
   });
 };
 
@@ -37,8 +37,6 @@ const getWord = () => {
   sendAjax('GET', '/word', null, (result) => {
     word = result.Word;
     createCanvasWindow();
-    createControlWindow();
-    createFormWindow();
     init();
   });
 };
@@ -141,28 +139,14 @@ const FormWindow = () =>{
 
 const createCanvasWindow = () => {
   ReactDOM.render(
-    <CavnasWindow/>,
+    <div>
+      <CavnasWindow/>
+      <ControlWindow/>
+      <FormWindow/>
+    </div>,
     document.querySelector("#content")
   );
 };
-
-const createControlWindow = () =>{
-  ReactDOM.render(
-    <ControlWindow/>,
-    document.querySelector("#controls")
-  );
-}
-
-const createFormWindow = () =>{
-  ReactDOM.render(
-    <FormWindow/>,
-    document.querySelector("#form")
-  );
-}
-
-$(document).ready(function() {
-  getToken();
-});
 
 // FUNCTIONS
 let init = () =>{
@@ -375,10 +359,7 @@ let doExport = () =>{
   // http://www.w3schools.com/jsref/met_win_open.asp
   var data = canvas.toDataURL();
 
-  //console.log(data);
-  sendAjax('POST', "/img", `img=${data}&_csrf=${token}`, function () {
-    return true;
-  });
+  sendAjax('POST', "/img", `img=${data}&_csrf=${token}`, redirect);
 
  }
 
@@ -441,3 +422,8 @@ let clearTopCanvas = () =>
 {
     topCtx.clearRect(0,0,topCtx.canvas.width,topCtx.canvas.height);
 }
+
+
+$(document).ready(function() {
+  getToken2();
+});

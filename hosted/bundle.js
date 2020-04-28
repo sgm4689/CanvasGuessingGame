@@ -23,14 +23,14 @@ var topCanvas;
 var topCtx;
 var word;
 
-var setup = function setup(csrf) {
+var setup2 = function setup2() {
   getWord();
 };
 
-var getToken = function getToken() {
+var getToken2 = function getToken2() {
   sendAjax('GET', '/getToken', null, function (result) {
     token = result.csrfToken;
-    setup(token);
+    setup2();
   });
 };
 
@@ -38,8 +38,6 @@ var getWord = function getWord() {
   sendAjax('GET', '/word', null, function (result) {
     word = result.Word;
     createCanvasWindow();
-    createControlWindow();
-    createFormWindow();
     init();
   });
 };
@@ -181,20 +179,9 @@ var FormWindow = function FormWindow() {
 };
 
 var createCanvasWindow = function createCanvasWindow() {
-  ReactDOM.render( /*#__PURE__*/React.createElement(CavnasWindow, null), document.querySelector("#content"));
-};
+  ReactDOM.render( /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(CavnasWindow, null), /*#__PURE__*/React.createElement(ControlWindow, null), /*#__PURE__*/React.createElement(FormWindow, null)), document.querySelector("#content"));
+}; // FUNCTIONS
 
-var createControlWindow = function createControlWindow() {
-  ReactDOM.render( /*#__PURE__*/React.createElement(ControlWindow, null), document.querySelector("#controls"));
-};
-
-var createFormWindow = function createFormWindow() {
-  ReactDOM.render( /*#__PURE__*/React.createElement(FormWindow, null), document.querySelector("#form"));
-};
-
-$(document).ready(function () {
-  getToken();
-}); // FUNCTIONS
 
 var init = function init() {
   // initialize some globals
@@ -386,11 +373,8 @@ var doClear = function doClear() {
 var doExport = function doExport() {
   // open a new window and load the image in it
   // http://www.w3schools.com/jsref/met_win_open.asp
-  var data = canvas.toDataURL(); //console.log(data);
-
-  sendAjax('POST', "/img", "img=".concat(data, "&_csrf=").concat(token), function () {
-    return true;
-  });
+  var data = canvas.toDataURL();
+  sendAjax('POST', "/img", "img=".concat(data, "&_csrf=").concat(token), redirect);
 };
 
 var doLineWidthChange = function doLineWidthChange(e) {
@@ -444,6 +428,140 @@ var drawGrid = function drawGrid(ctx, color, cellWidth, cellHeight) {
 var clearTopCanvas = function clearTopCanvas() {
   topCtx.clearRect(0, 0, topCtx.canvas.width, topCtx.canvas.height);
 };
+
+$(document).ready(function () {
+  getToken2();
+});
+"use strict";
+
+var token, username, imageURLS, fixedURI;
+
+var getToken = function getToken() {
+  sendAjax('GET', '/getToken', null, function (result) {
+    token = result.csrfToken;
+    getImages(token);
+  });
+};
+
+var handleConnect = function handleConnect(e) {
+  e.preventDefault();
+  sendAjax('POST', '/connect', "id=".concat(null, "&_csrf=", token), redirect);
+};
+
+var ConnectWindow = function ConnectWindow() {
+  return (/*#__PURE__*/React.createElement("form", {
+      id: "connectForm",
+      onSubmit: handleConnect,
+      name: "connectForm",
+      className: "connectForm"
+    }, /*#__PURE__*/React.createElement("input", {
+      id: "msg"
+    }), /*#__PURE__*/React.createElement("input", {
+      id: "connect",
+      type: "submit",
+      value: "Enter"
+    }))
+  );
+};
+
+var handleChange = function handleChange(e) {
+  e.preventDefault();
+  $("#domoMessage").animate({
+    width: 'hide'
+  }, 350);
+
+  if ($("#oldPass").val() == '' || $("#pass").val() == '' || $("#pass2").val() == '') {
+    handleError("All fields are required");
+    return false;
+  }
+
+  if ($("#pass").val() !== $("#pass2").val()) {
+    handleError("RAWR! Passwords do not match");
+    return false;
+  }
+
+  sendAjax('POST', $("#passForm").attr("action"), $("#passForm").serialize(), redirect);
+  return false;
+};
+
+var PasswordWindow = function PasswordWindow(props) {
+  return (/*#__PURE__*/React.createElement("form", {
+      id: "passForm",
+      name: "passForm",
+      onSubmit: handleChange,
+      action: "/changePass",
+      method: "POST",
+      className: "mainForm"
+    }, /*#__PURE__*/React.createElement("label", {
+      htmlFor: "oldPass"
+    }, "Current Password: "), /*#__PURE__*/React.createElement("input", {
+      id: "oldPass",
+      type: "password",
+      name: "oldPass",
+      placeholder: "password"
+    }), /*#__PURE__*/React.createElement("label", {
+      htmlFor: "pass"
+    }, "Password: "), /*#__PURE__*/React.createElement("input", {
+      id: "pass",
+      type: "password",
+      name: "pass",
+      placeholder: "password"
+    }), /*#__PURE__*/React.createElement("label", {
+      htmlFor: "pass2"
+    }, "Password: "), /*#__PURE__*/React.createElement("input", {
+      id: "pass2",
+      type: "password",
+      name: "pass2",
+      placeholder: "password"
+    }), /*#__PURE__*/React.createElement("input", {
+      type: "hidden",
+      name: "_csrf",
+      value: props.csrf
+    }), /*#__PURE__*/React.createElement("input", {
+      className: "formSubmit",
+      type: "submit",
+      value: "Sign in"
+    }))
+  );
+};
+
+var Images = function Images() {
+  return (/*#__PURE__*/React.createElement("img", {
+      src: fixedURI
+    })
+  );
+};
+
+var getImages = function getImages() {
+  sendAjax('GET', '/images', null, function (results) {
+    imageURLS = results.Drawings; //The URI's are stored properly in mongoose, however they're not being retrieved properly.  Instead of the + they're saved with
+    //They're being retrieved with spaces.  Until I determine what's wrong, this code'll fix the problem.  Also only displaying the last saved img
+    //to reduce clutter on screen
+
+    if (imageURLS.length > 0) {
+      fixedURI = imageURLS[imageURLS.length - 1].img.replace(/ /g, "+");
+    }
+
+    createContent();
+    displayArt();
+  });
+};
+
+var createContent = function createContent() {
+  ReactDOM.render( /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ConnectWindow, null), /*#__PURE__*/React.createElement(PasswordWindow, {
+    csrf: token
+  })), document.querySelector("#profile"));
+};
+
+var displayArt = function displayArt() {
+  if (imageURLS.length > 0) {
+    ReactDOM.render( /*#__PURE__*/React.createElement(Images, null), document.querySelector("#images"));
+  }
+};
+
+$(document).ready(function () {
+  getToken();
+});
 "use strict";
 
 var handleError = function handleError(message) {

@@ -8,6 +8,7 @@ let DrawingModel = {};
 // Converts string to mongo ID
 const convertId = mongoose.Types.ObjectId;
 const setWord = (word) => _.escape(word).trim();
+const setImg = (img) => _.escape(img);
 
 // not yet implemented
 const DrawingSchema = new mongoose.Schema({
@@ -19,8 +20,9 @@ const DrawingSchema = new mongoose.Schema({
   },
 
   img: {
-    data: Buffer,
-    contentType: String,
+    type: String,
+    required: true,
+    set: setImg,
   },
 
   owner: {
