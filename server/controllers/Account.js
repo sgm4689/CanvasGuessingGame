@@ -139,8 +139,24 @@ const changePass = (request, response) => {
       }
 
       return res.json({
-        redirect: '/profile',
+        redirect: 'profile',
       });
+      ////*not implemented yet*
+      // return Account.AccountModel.updatePass(
+      //   req.session.account.username,
+      //   req.body.pass,
+      //   (err, account) => {
+      //     if (err || !account) {
+      //       return res.status(401).json({
+      //         error: 'Wrong username or password',
+      //       });
+      //     }
+      //
+      //     return res.json({
+      //       redirect: '/profile',
+      //     });
+      //   },
+      // );
     },
   );
 };

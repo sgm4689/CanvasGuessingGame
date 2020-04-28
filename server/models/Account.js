@@ -82,18 +82,16 @@ AccountSchema.statics.authenticate = (username, password, callback) => {
 };
 
 AccountSchema.statics.updatePass = (username, password, callback) => {
-  const account = { username }; const
-    newPass = { password };
-  AccountModel.updateOne(account, newPass, (err, doc) => {
+  let search = {username: username};
+  let update = {password: password};
+
+  let doc = AccountModel.findOneAndUpdate(search, update, (err, result) =>{
     if (err) {
-      return callback(err);
+       return callback(err);
+    } else {
+      console.log(doc.username);
+      return callback(null, doc);
     }
-
-    if (!doc) {
-      return callback();
-    }
-
-    return callback(null, doc);
   });
 };
 
