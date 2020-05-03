@@ -12,13 +12,16 @@
 </head>
 <body>
   <nav><a href="/login"><img id="logo" src="/assets/img/face.png" alt="face logo"/></a>
-    <div class="navlink"><a href="/logout">Log out</a></div>
+    <div class="navlink">{{username}}<a href="/logout">Log out</a></div>
   </nav>
 
   <section id="content"></section>
 
   <script src="/assets/bundle.js"></script>
   <link rel="stylesheet" type="text/css" href="/assets/style.css"/>
-
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    var socket = io();
+  </script>
 </body>
 </html>

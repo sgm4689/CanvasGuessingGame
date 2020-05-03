@@ -41,6 +41,8 @@ const validatePassword = (doc, password, callback) => {
 
   return crypto.pbkdf2(password, doc.salt, iterations, keyLength, 'RSA-SHA512', (err, hash) => {
     if (hash.toString('hex') !== pass) {
+      console.log(pass);
+      console.log(hash.toString('hex'));
       return callback(false);
     }
     return callback(true);
@@ -78,20 +80,6 @@ AccountSchema.statics.authenticate = (username, password, callback) => {
 
       return callback();
     });
-  });
-};
-
-AccountSchema.statics.updatePass = (username, password, callback) => {
-  let search = {username: username};
-  let update = {password: password};
-
-  let doc = AccountModel.findOneAndUpdate(search, update, (err) =>{
-    if (err) {
-       return callback(err);
-    } else {
-      console.log(doc.username);
-      return callback(null, doc);
-    }
   });
 };
 

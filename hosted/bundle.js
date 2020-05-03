@@ -1,6 +1,9 @@
 "use strict";
 
-var token; // GLOBALS
+var token;
+var socket;
+var canDraw;
+var username; // GLOBALS
 
 var canvas,
     ctx,
@@ -24,7 +27,25 @@ var topCtx;
 var word;
 
 var setup2 = function setup2() {
-  getWord();
+  socket = io.connect('http://localhost:3000');
+  socket.on('mouseDown', function (data) {
+    currentTool = data.currentTool;
+    MouseDown(data.e, data.mouse);
+  });
+  socket.on('clear', clear);
+  socket.on('mouse', redraw);
+  socket.on('mouseOut', MouseOut);
+  socket.on('lineWidth', LineWidthChange);
+  socket.on('strokeStyle', StrokeStyleChange);
+  socket.on('mouseUp', function (data) {
+    MouseUp(data.e, data);
+  });
+  socket.on('refresh', getInfo);
+  getInfo();
+};
+
+var redraw = function redraw(data) {
+  Draw(data.tool, data.mouse);
 };
 
 var getToken2 = function getToken2() {
@@ -34,9 +55,12 @@ var getToken2 = function getToken2() {
   });
 };
 
-var getWord = function getWord() {
+var getInfo = function getInfo() {
   sendAjax('GET', '/word', null, function (result) {
     word = result.Word;
+    username = result.Username;
+    if (result.Drawer === username) canDraw = true;else canDraw = false;
+    console.log(result.Drawer + " " + username);
     createCanvasWindow();
     init();
   });
@@ -45,11 +69,13 @@ var getWord = function getWord() {
 var checkWord = function checkWord(e) {
   e.preventDefault();
   sendAjax('POST', '/word', "word=".concat(msg.value, "&_csrf=").concat(token), function (result) {
-    messages.innerHTML = result.Word;
+    if (result.Correct) {
+      socket.emit('refresh', {}); //tell all other players someone guessed the answer
+    }
   });
 };
 
-var CavnasWindow = function CavnasWindow() {
+var DrawingWindow = function DrawingWindow() {
   return (/*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("canvas", {
       id: "mainCanvas",
       width: 700,
@@ -62,9 +88,138 @@ var CavnasWindow = function CavnasWindow() {
   );
 };
 
-var ControlWindow = function ControlWindow() {
+var DisplayWindow = function DisplayWindow() {
+  return (/*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("canvas", {
+      id: "mainCanvas",
+      width: 700,
+      height: 500
+    }), /*#__PURE__*/React.createElement("canvas", {
+      id: "topCanvas",
+      width: 700,
+      height: 500,
+      hidden: true
+    }))
+  );
+};
+
+var CanvasWindow = function CanvasWindow(props) {
+  if (props.drawer) return (/*#__PURE__*/React.createElement(DrawingWindow, null)
+  );else {
+    return (/*#__PURE__*/React.createElement(DisplayWindow, null)
+    );
+  }
+};
+
+var ControlWindow = function ControlWindow(props) {
+  if (props.flag) return (/*#__PURE__*/React.createElement(HasControls, null)
+  );else {
+    return (/*#__PURE__*/React.createElement(HideControls, null)
+    );
+  }
+};
+
+var HasControls = function HasControls() {
   return (/*#__PURE__*/React.createElement("div", {
       id: "controls"
+    }, /*#__PURE__*/React.createElement("label", null, "Tool:", /*#__PURE__*/React.createElement("select", {
+      id: "toolChooser"
+    }, /*#__PURE__*/React.createElement("option", {
+      value: "toolPencil"
+    }, "Pencil"), /*#__PURE__*/React.createElement("option", {
+      value: "toolRectangle"
+    }, "Rectangle"), /*#__PURE__*/React.createElement("option", {
+      value: "toolCircle"
+    }, "Circle"), /*#__PURE__*/React.createElement("option", {
+      value: "toolLine"
+    }, "Line"))), /*#__PURE__*/React.createElement("label", null, "Line Width:", /*#__PURE__*/React.createElement("select", {
+      id: "lineWidthChooser",
+      defaultValue: "3"
+    }, /*#__PURE__*/React.createElement("option", {
+      value: "1"
+    }, "1"), /*#__PURE__*/React.createElement("option", {
+      value: "2"
+    }, "2"), /*#__PURE__*/React.createElement("option", {
+      value: "3"
+    }, "3"), /*#__PURE__*/React.createElement("option", {
+      value: "4"
+    }, "4"), /*#__PURE__*/React.createElement("option", {
+      value: "5"
+    }, "5"), /*#__PURE__*/React.createElement("option", {
+      value: "6"
+    }, "6"), /*#__PURE__*/React.createElement("option", {
+      value: "7"
+    }, "7"), /*#__PURE__*/React.createElement("option", {
+      value: "8"
+    }, "8"), /*#__PURE__*/React.createElement("option", {
+      value: "9"
+    }, "9"), /*#__PURE__*/React.createElement("option", {
+      value: "10"
+    }, "10"))), /*#__PURE__*/React.createElement("label", null, "Line Style", /*#__PURE__*/React.createElement("select", {
+      id: "strokeStyleChooser",
+      defaultValue: "black"
+    }, /*#__PURE__*/React.createElement("option", {
+      value: "red"
+    }, "red"), /*#__PURE__*/React.createElement("option", {
+      value: "green"
+    }, "green"), /*#__PURE__*/React.createElement("option", {
+      value: "blue"
+    }, "blue"), /*#__PURE__*/React.createElement("option", {
+      value: "orange"
+    }, "orange"), /*#__PURE__*/React.createElement("option", {
+      value: "yellow"
+    }, "yellow"), /*#__PURE__*/React.createElement("option", {
+      value: "purple"
+    }, "purple"), /*#__PURE__*/React.createElement("option", {
+      value: "pink"
+    }, "pink"), /*#__PURE__*/React.createElement("option", {
+      value: "black"
+    }, "black"), /*#__PURE__*/React.createElement("option", {
+      value: "brown"
+    }, "brown"), /*#__PURE__*/React.createElement("option", {
+      value: "gray"
+    }, "gray"), /*#__PURE__*/React.createElement("option", {
+      value: "white"
+    }, "white"))), /*#__PURE__*/React.createElement("label", null, "fill Style", /*#__PURE__*/React.createElement("select", {
+      id: "fillStyleChooser",
+      defaultValue: "blue"
+    }, /*#__PURE__*/React.createElement("option", {
+      value: "red"
+    }, "red"), /*#__PURE__*/React.createElement("option", {
+      value: "green"
+    }, "green"), /*#__PURE__*/React.createElement("option", {
+      value: "blue"
+    }, "blue"), /*#__PURE__*/React.createElement("option", {
+      value: "orange"
+    }, "orange"), /*#__PURE__*/React.createElement("option", {
+      value: "yellow"
+    }, "yellow"), /*#__PURE__*/React.createElement("option", {
+      value: "purple"
+    }, "purple"), /*#__PURE__*/React.createElement("option", {
+      value: "pink"
+    }, "pink"), /*#__PURE__*/React.createElement("option", {
+      value: "black"
+    }, "black"), /*#__PURE__*/React.createElement("option", {
+      value: "brown"
+    }, "brown"), /*#__PURE__*/React.createElement("option", {
+      value: "gray"
+    }, "gray"), /*#__PURE__*/React.createElement("option", {
+      value: "white"
+    }, "white"))), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("input", {
+      id: "clearButton",
+      type: "button",
+      value: "Clear"
+    })), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("input", {
+      id: "exportButton",
+      type: "button",
+      value: "Export"
+    })))
+  );
+};
+
+var HideControls = function HideControls() {
+  return (/*#__PURE__*/React.createElement("div", {
+      id: "controls",
+      hidden: true
     }, /*#__PURE__*/React.createElement("label", null, "Tool:", /*#__PURE__*/React.createElement("select", {
       id: "toolChooser"
     }, /*#__PURE__*/React.createElement("option", {
@@ -179,8 +334,15 @@ var FormWindow = function FormWindow() {
 };
 
 var createCanvasWindow = function createCanvasWindow() {
-  ReactDOM.render( /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(CavnasWindow, null), /*#__PURE__*/React.createElement(ControlWindow, null), /*#__PURE__*/React.createElement(FormWindow, null)), document.querySelector("#content"));
-}; // FUNCTIONS
+  ReactDOM.render( /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(CanvasWindow, {
+    drawer: canDraw
+  }), /*#__PURE__*/React.createElement(ControlWindow, {
+    flag: canDraw
+  }), /*#__PURE__*/React.createElement(FormWindow, null)), document.querySelector("#content"));
+}; // Every action needs 2 functions.  1 event function that contains the actual code
+//Plus a 2nd wrapper function that sends a socket message and then calls the first function
+//Without this when other browsers recieved information from socket they'd call the drawing method
+//which would then recursively send out a new socket message, breaking everything
 
 
 var init = function init() {
@@ -228,12 +390,10 @@ var init = function init() {
     fillStyle = e.target.value;
     console.log("currentStyle=" + fillStyle);
   };
-}; // EVENT CALLBACK FUNCTIONS
+};
 
-
-var doMousedown = function doMousedown(e) {
+var MouseDown = function MouseDown(e, mouse) {
   dragging = true;
-  var mouse = getMouse(e);
 
   switch (currentTool) {
     case TOOL_PENCIL:
@@ -250,11 +410,18 @@ var doMousedown = function doMousedown(e) {
   }
 };
 
-var doMousemove = function doMousemove(e) {
-  if (!dragging) return; // bail out if the mouse button is not down
+var doMousedown = function doMousedown(e) {
+  var mouse = getMouse(e);
+  MouseDown(e, mouse);
+  var data = {
+    currentTool: currentTool,
+    origin: origin,
+    mouse: mouse
+  };
+  socket.emit('mouseDown', data);
+};
 
-  var mouse = getMouse(e); // get location of mouse in canvas coordinates
-
+var Draw = function Draw(currentTool, mouse) {
   switch (currentTool) {
     case TOOL_PENCIL:
       // set ctx.strokeStyle and ctx.lineWidth to correct values
@@ -324,7 +491,22 @@ var doMousemove = function doMousemove(e) {
   }
 };
 
-var doMouseup = function doMouseup(e) {
+var doMousemove = function doMousemove(e) {
+  if (!dragging) return; // bail out if the mouse button is not down
+
+  var mouse = getMouse(e); // get location of mouse in canvas coordinates
+
+  Draw(currentTool, mouse, origin);
+  var data = {
+    mouse: mouse,
+    origin: origin,
+    tool: currentTool
+  };
+  socket.emit('mouse', data);
+  console.log(data);
+};
+
+var MouseUp = function MouseUp(e, data) {
   switch (currentTool) {
     case TOOL_PENCIL:
       ctx.closePath();
@@ -335,7 +517,7 @@ var doMouseup = function doMouseup(e) {
     case TOOL_LINE:
       if (dragging) {
         topCtx.globalAlpha = 1;
-        doMousemove(e);
+        if (data) Draw(data.currentTool, data.mouse, data.origin);else doMousemove(e);
         ctx.drawImage(topCanvas, 0, 0);
         clearTopCanvas();
         topCtx.globalAlpha = 0.3;
@@ -345,10 +527,21 @@ var doMouseup = function doMouseup(e) {
   }
 
   dragging = false;
-}; // if the user drags out of the canvas
+};
 
+var doMouseup = function doMouseup(e) {
+  var temp = getMouse(e);
+  socket.emit('mouseUp', {
+    e: e,
+    currentTool: currentTool,
+    mouse: temp,
+    dragging: dragging,
+    origin: origin
+  });
+  MouseUp(e);
+};
 
-var doMouseout = function doMouseout(e) {
+var MouseOut = function MouseOut(e) {
   switch (currentTool) {
     case TOOL_PENCIL:
       ctx.closePath();
@@ -363,11 +556,26 @@ var doMouseout = function doMouseout(e) {
   }
 
   dragging = false;
+}; // if the user drags out of the canvas
+
+
+var doMouseout = function doMouseout(e) {
+  MouseOut(e);
+  socket.emit('mouseOut', {
+    e: e
+  });
+};
+
+var clear = function clear() {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+  drawGrid(ctx, 'lightgray', 10, 10);
 };
 
 var doClear = function doClear() {
-  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-  drawGrid(ctx, 'lightgray', 10, 10);
+  socket.emit('clear', {
+    clear: "clear"
+  });
+  clear();
 };
 
 var doExport = function doExport() {
@@ -377,12 +585,26 @@ var doExport = function doExport() {
   sendAjax('POST', "/img", "img=".concat(data, "&_csrf=").concat(token), redirect);
 };
 
+var LineWidthChange = function LineWidthChange(value) {
+  lineWidth = value;
+};
+
 var doLineWidthChange = function doLineWidthChange(e) {
-  lineWidth = e.target.value;
+  socket.emit("lineWidth", {
+    value: e.target.value
+  });
+  LineWidthChange(e.target.value);
+};
+
+var StrokeStyleChange = function StrokeStyleChange(value) {
+  strokeStyle = value;
 };
 
 var doStrokeStyleChange = function doStrokeStyleChange(e) {
-  strokeStyle = e.target.value;
+  socket.emit("strokeStyle", {
+    value: e.target.value
+  });
+  StrokeStyleChange(e.target.value);
 };
 
 var distance = function distance(p1, p2) {
@@ -434,7 +656,7 @@ $(document).ready(function () {
 });
 "use strict";
 
-var token, username, imageURLS, fixedURI;
+var token, imageURLS, fixedURI;
 
 var getToken = function getToken() {
   sendAjax('GET', '/getToken', null, function (result) {
@@ -445,7 +667,7 @@ var getToken = function getToken() {
 
 var handleConnect = function handleConnect(e) {
   e.preventDefault();
-  sendAjax('POST', '/connect', "id=".concat(null, "&_csrf=", token), redirect);
+  sendAjax('POST', '/connect', "id=".concat(msg.value, "&_csrf=").concat(token), redirect);
 };
 
 var ConnectWindow = function ConnectWindow() {
@@ -530,7 +752,16 @@ var Images = function Images() {
       src: fixedURI
     })
   );
-};
+}; // const Images = () =>{
+//   return(
+//     <Carousel>
+//       {elements.map((value, index) => {
+//         return <Carousel.item><img src={value} key={index}></img></Carousel.item>
+//       })}
+//     </Carousel>
+//   );
+// }
+
 
 var getImages = function getImages() {
   sendAjax('GET', '/images', null, function (results) {

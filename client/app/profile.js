@@ -1,4 +1,4 @@
-let token, username, imageURLS, fixedURI;
+let token, imageURLS, fixedURI;
 
 
 const getToken = () => {
@@ -11,7 +11,7 @@ const getToken = () => {
 const handleConnect = (e) =>{
   e.preventDefault();
 
-  sendAjax('POST', '/connect', `id=${null}&_csrf=${token}`, redirect);
+  sendAjax('POST', '/connect', `id=${msg.value}&_csrf=${token}`, redirect);
 }
 
 const ConnectWindow = () =>{
@@ -73,6 +73,16 @@ const PasswordWindow = (props) =>{
       <img src={fixedURI}></img>
       );
   }
+
+  // const Images = () =>{
+  //   return(
+  //     <Carousel>
+  //       {elements.map((value, index) => {
+  //         return <Carousel.item><img src={value} key={index}></img></Carousel.item>
+  //       })}
+  //     </Carousel>
+  //   );
+  // }
 
   const getImages = () =>{
     sendAjax('GET', '/images', null, (results) =>{

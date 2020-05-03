@@ -1,4 +1,5 @@
 const words = ['taco', 'burrito', 'Chili'];
+let drawer;
 
 const getRandomInt = (max) => {
   const num = Math.floor(Math.random() * Math.floor(max));
@@ -10,6 +11,7 @@ let word = words[getRandomInt(words.length)];
 
 const checkWord = (req, res) => {
   if (req.body.word === word) {
+    drawer = req.session.account.username;
     word = words[getRandomInt(words.length)];
   }
   res.redirect('/word');// Redirect to getWord, so the client knows the word has changes
@@ -17,9 +19,32 @@ const checkWord = (req, res) => {
 
 
 const getWord = (req, res) => {
-  res.json({
-    Word: word,
-  });
+  let value;
+  if (req.session.account.username === drawer) {
+    value = {
+      Word: word,
+      Drawer: drawer,
+      Username: req.session.account.username,
+      Correct: true,
+    };
+  } else if (!drawer) { // If there isn't a drawer yet, you get to be the first one
+    drawer = req.session.account.username;
+    value = {
+      Word: word,
+      Drawer: drawer,
+      Username: req.session.account.username,
+      Correct: true,
+    };
+  } else {
+    value = {
+      Word: '',
+      Drawer: drawer,
+      Username: req.session.account.username,
+      Correct: false,
+    };
+  }
+  console.log(drawer);
+  res.json(value);
 };
 
 

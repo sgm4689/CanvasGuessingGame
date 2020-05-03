@@ -6,6 +6,7 @@ const {
 
 const makerPage = (req, res) => res.render('app', {
   csrfToken: req.csrfToken(),
+  username: req.session.account.username,
 });
 
 const profilePage = (req, res) => res.render('profile', {

@@ -79,6 +79,8 @@ const signup = (request, response) => {
       salt,
       password: hash,
     };
+    console.log(hash);
+    console.log(salt);
 
     const newAccount = new Account.AccountModel(accountData);
 
@@ -128,38 +130,35 @@ const changePass = (request, response) => {
     });
   }
 
-  return Account.AccountModel.authenticate(
-    req.session.account.username,
-    req.body.oldPass,
-    (err, account) => {
-      if (err || !account) {
-        return res.status(401).json({
-          error: 'Wrong username or password',
-        });
-      }
+  return Account.AccountModel.generateHash(
+    req.body.pass,
+    (salt, hash) => Account.AccountModel.findById(req.session.account._id, (err, account) => {
+      account.salt = salt;
+      account.password = hash;
 
-      return res.json({
+      const savePromise = account.save();
+
+      savePromise.then(() => res.json({
         redirect: 'profile',
+      }));
+
+      savePromise.catch((error) => {
+        console.log(error);
+
+        if (err.code === 11000) {
+          return res.status(400).json({
+            error: 'Username already in use.',
+          });
+        }
+
+        return res.status(400).json({
+          error: 'An error occured',
+        });
       });
-      ////*not implemented yet*
-      // return Account.AccountModel.updatePass(
-      //   req.session.account.username,
-      //   req.body.pass,
-      //   (err, account) => {
-      //     if (err || !account) {
-      //       return res.status(401).json({
-      //         error: 'Wrong username or password',
-      //       });
-      //     }
-      //
-      //     return res.json({
-      //       redirect: '/profile',
-      //     });
-      //   },
-      // );
-    },
+    }),
   );
 };
+
 
 const getToken = (request, response) => {
   const req = request;

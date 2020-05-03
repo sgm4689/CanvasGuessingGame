@@ -22,6 +22,59 @@ const mongooseOptions = {
   useUnifiedTopology: true,
 };
 
+
+const app = express();
+
+const http = require('http').Server(app);
+const io = require('socket.io')(http);
+
+const newConnection = (socket) => {
+  console.log('a user connected');
+
+  socket.on('mouse', (data) => {
+    socket.broadcast.emit('mouse', data);
+    console.log(data);
+  });
+
+  socket.on('mouseUp', (data) => {
+    socket.broadcast.emit('mouseUp', data);
+    console.log(data);
+  });
+
+  socket.on('mouseDown', (data) => {
+    socket.broadcast.emit('mouseDown', data);
+    console.log(data);
+  });
+
+  socket.on('mouseOut', (data) => {
+    socket.broadcast.emit('mouseOut', data);
+    console.log(data);
+  });
+
+  socket.on('lineWidth', (data) => {
+    socket.broadcast.emit('lineWidth', data);
+    console.log(data);
+  });
+
+  socket.on('strokeStyle', (data) => {
+    socket.broadcast.emit('strokeStyle', data);
+    console.log(data);
+  });
+
+  socket.on('clear', (data) => {
+    socket.broadcast.emit('clear', data);
+    console.log(data);
+  });
+
+  socket.on('refresh', (data) => {
+    io.sockets.emit('refresh', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+};
+
 mongoose.connect(dbURL, mongooseOptions, (err) => {
   if (err) {
     console.log('Could not connect to database');
@@ -30,15 +83,15 @@ mongoose.connect(dbURL, mongooseOptions, (err) => {
 });
 
 // Local redis var
-// let redisURL = {
-//   hostname: 'redis-15969.c9.us-east-1-2.ec2.cloud.redislabs.com',
-//   port: 15969,
-// };
-
 let redisURL = {
-  hostname: 'redis://rediscloud:AAs7yX0JG23Uikx0fwhaATkBqtndbM5h@redis-15371.c10.us-east-1-4.ec2.cloud.redislabs.com',
-  port: 15371,
+  hostname: 'redis-15969.c9.us-east-1-2.ec2.cloud.redislabs.com',
+  port: 15969,
 };
+
+// let redisURL = {
+//   hostname: 'redis://rediscloud:AAs7yX0JG23Uikx0fwhaATkBqtndbM5h@redis-15371.c10.us-east-1-4.ec2.cloud.redislabs.com',
+//   port: 15371,
+// };
 
 let redisPASS = 'R7Ixr8hncZuBOEO4NRWNOCU4XlAlZPe3';
 if (process.env.REDISCLOUD_URL) {
@@ -53,11 +106,6 @@ const redisClient = redis.createClient({
 });
 
 const router = require('./router.js');
-
-const app = express();
-
-// var http = require(‘http’).Server(app);
-// var io = require(‘socket.io’)(http);
 
 app.use('/assets', express.static(path.resolve(`${__dirname}/../hosted/`)));
 app.use(favicon(`${__dirname}/../hosted/img/favicon.png`));
@@ -95,7 +143,9 @@ app.use((err, req, res, next) => {
 
 router(app);
 
-app.listen(port, (err) => {
+io.sockets.on('connection', newConnection);
+
+http.listen(port, (err) => {
   if (err) {
     throw err;
   }
