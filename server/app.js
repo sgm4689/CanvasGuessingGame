@@ -83,15 +83,15 @@ mongoose.connect(dbURL, mongooseOptions, (err) => {
 });
 
 // Local redis var
-let redisURL = {
-  hostname: 'redis-15969.c9.us-east-1-2.ec2.cloud.redislabs.com',
-  port: 15969,
-};
-
 // let redisURL = {
-//   hostname: 'redis://rediscloud:AAs7yX0JG23Uikx0fwhaATkBqtndbM5h@redis-15371.c10.us-east-1-4.ec2.cloud.redislabs.com',
-//   port: 15371,
+//   hostname: 'redis-15969.c9.us-east-1-2.ec2.cloud.redislabs.com',
+//   port: 15969,
 // };
+
+let redisURL = {
+  hostname: 'redis://rediscloud:AAs7yX0JG23Uikx0fwhaATkBqtndbM5h@redis-15371.c10.us-east-1-4.ec2.cloud.redislabs.com',
+  port: 15371,
+};
 
 let redisPASS = 'R7Ixr8hncZuBOEO4NRWNOCU4XlAlZPe3';
 if (process.env.REDISCLOUD_URL) {
