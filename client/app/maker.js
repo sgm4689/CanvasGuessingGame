@@ -26,7 +26,7 @@ let canvas,ctx,dragging=false,lineWidth,strokeStyle;
   let word;
 
 const setup2 = () =>{
-  socket = io.connect('http://localhost:3000');
+  socket = io();
   socket.on('mouseDown', (data) =>{
     currentTool = data.currentTool;
     MouseDown(data.e, data.mouse)

@@ -27,7 +27,7 @@ var topCtx;
 var word;
 
 var setup2 = function setup2() {
-  socket = io.connect('http://localhost:3000');
+  socket = io();
   socket.on('mouseDown', function (data) {
     currentTool = data.currentTool;
     MouseDown(data.e, data.mouse);
