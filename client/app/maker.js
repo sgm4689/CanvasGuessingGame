@@ -546,7 +546,7 @@ let doExport = () =>{
   // http://www.w3schools.com/jsref/met_win_open.asp
   var data = canvas.toDataURL();
 
-  sendAjax('POST', "/img", `img=${data}&_csrf=${token}`, redirect);
+  sendAjax('POST', "/img", `img=${data}&_csrf=${token}`);
 
  }
 

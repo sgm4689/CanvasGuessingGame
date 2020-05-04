@@ -608,7 +608,7 @@ var doExport = function doExport() {
   // open a new window and load the image in it
   // http://www.w3schools.com/jsref/met_win_open.asp
   var data = canvas.toDataURL();
-  sendAjax('POST', "/img", "img=".concat(data, "&_csrf=").concat(token), redirect);
+  sendAjax('POST', "/img", "img=".concat(data, "&_csrf=").concat(token));
 };
 
 var LineWidthChange = function LineWidthChange(value) {

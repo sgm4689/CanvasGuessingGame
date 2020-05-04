@@ -31,7 +31,7 @@ const makeDrawing = (req, res) => {
   const DrawingPromise = newDrawing.save();
 
   DrawingPromise.then(() => res.json({
-    redirect: '/maker',
+
   }));
 
   DrawingPromise.catch((err) => {
