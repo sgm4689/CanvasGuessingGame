@@ -62,7 +62,6 @@ const getInfo = () => {
       canDraw = true;
     else
       canDraw = false;
-      console.log(result.Drawer + " " + username);
     createCanvasWindow();
     init();
   });
@@ -71,12 +70,21 @@ const getInfo = () => {
 const checkWord = (e) => {
   e.preventDefault();
 
-  sendAjax('POST', '/word', `word=${msg.value}&_csrf=${token}`, (result) => {
-    if (result.Correct){
-      socket.emit('refresh', {});//tell all other players someone guessed the answer
-    }
-  });
+  if (!drawer){
+    sendAjax('GET', '/word', null, (result) => {
+      if (result.Correct){
+        socket.emit('refresh', {});//tell all other players someone guessed the answer
+      }
+    });
+}
 };
+
+const handleDisconnect = (e) =>{
+  if (canDraw){
+      socket.emit('refresh', {});//Choose a new guesser
+    }
+    sendAjax('GET', '/clear', null, redirect);
+}
 
 const DrawingWindow = () =>{
   return(
@@ -95,6 +103,19 @@ const DisplayWindow = () =>{
     </div>
   );
 }
+
+
+const DisconnectWindow = () =>{
+  return(
+      <form id="disconnectForm"
+      onSubmit={handleDisconnect}
+      name="disconnectForm"
+      className="disconnectForm"
+      >
+        <input id="disconnect" className="formSubmit" type="submit" value="Leave" />
+      </form>
+  );
+  }
 
 const CanvasWindow = (props) =>{
   if (props.drawer)
@@ -170,7 +191,7 @@ const HasControls = () =>{
 
 
     	<span><input id="clearButton" type="button" value="Clear"/></span>
-    	<span><input id="exportButton" type="button" value="Export"/></span>
+    	<span><input id="exportButton" type="button" value="Save"/></span>
     </div>
   );
 }
@@ -241,7 +262,8 @@ const HideControls = () =>{
 const FormWindow = () =>{
   return(
     <div>
-      <ul id="messages">{word}</ul>
+      <div className="answers" id="title">Your word is:</div>
+      <ul className="answers" id="answer">{word}</ul>
       <form id="answers"
       onSubmit={checkWord}
       name="answerForm"
@@ -257,6 +279,7 @@ const FormWindow = () =>{
 const createCanvasWindow = () => {
   ReactDOM.render(
     <div>
+      <DisconnectWindow />
       <CanvasWindow drawer={canDraw}/>
       <ControlWindow flag={canDraw}/>
       <FormWindow/>
@@ -317,12 +340,10 @@ let init = () =>{
       document.querySelector('#toolChooser').onchange = function(e)
       {
           currentTool = e.target.value;
-          console.log("currentTool=" + currentTool);
       };
       document.querySelector('#fillStyleChooser').onchange = function(e)
       {
           fillStyle = e.target.value;
-          console.log("currentStyle=" + fillStyle);
       };
 }
 
@@ -447,7 +468,6 @@ let doMousemove = (e) =>{
       };
 
       socket.emit('mouse', data);
-      console.log(data);
 }
 
 let MouseUp = (e, data) =>{

@@ -1,4 +1,5 @@
-let token, imageURLS, fixedURI;
+let token, imageURLS;
+let fixedURI = [];
 
 
 const getToken = () => {
@@ -11,7 +12,7 @@ const getToken = () => {
 const handleConnect = (e) =>{
   e.preventDefault();
 
-  sendAjax('POST', '/connect', `id=${msg.value}&_csrf=${token}`, redirect);
+  sendAjax('POST', '/connect', `_csrf=${token}`, redirect);
 }
 
 const ConnectWindow = () =>{
@@ -21,8 +22,7 @@ const ConnectWindow = () =>{
       name="connectForm"
       className="connectForm"
       >
-        <input id="msg" />
-        <input id="connect" type="submit" value="Enter" />
+        <input id="connect" className="formSubmit" type="submit" value="Join Lobby" />
       </form>
   );
   }
@@ -38,7 +38,7 @@ const handleChange = (e) => {
   }
 
   if ($("#pass").val() !== $("#pass2").val()) {
-    handleError("RAWR! Passwords do not match");
+    handleError("Passwords do not match");
     return false;
   }
 
@@ -57,32 +57,27 @@ const PasswordWindow = (props) =>{
         className="mainForm"
       >
         <label htmlFor="oldPass">Current Password: </label>
-        <input id="oldPass" type="password" name="oldPass" placeholder="password"/>
-        <label htmlFor="pass">Password: </label>
-        <input id="pass" type="password" name="pass" placeholder="password"/>
-        <label htmlFor="pass2">Password: </label>
-        <input id="pass2" type="password" name="pass2" placeholder="password"/>
+        <input id="oldPass" type="password" name="oldPass" placeholder="Old password"/>
+        <label htmlFor="pass">New Password: </label>
+        <input id="pass" type="password" name="pass" placeholder="New password"/>
+        <label htmlFor="pass2">New Password: </label>
+        <input id="pass2" type="password" name="pass2" placeholder="New password"/>
         <input type="hidden" name="_csrf" value={props.csrf} />
-        <input className="formSubmit" type="submit" value="Sign in" />
+        <input className="formSubmit" type="submit" value="Sign in"/>
       </form>
     );
   }
 
   const Images = () =>{
     return(
-      <img src={fixedURI}></img>
+      <div className="images">
+        {fixedURI.map((value, index) => {
+          return <img key={index} src={value} className="image"></img>
+        })}
+      </div>
       );
   }
 
-  // const Images = () =>{
-  //   return(
-  //     <Carousel>
-  //       {elements.map((value, index) => {
-  //         return <Carousel.item><img src={value} key={index}></img></Carousel.item>
-  //       })}
-  //     </Carousel>
-  //   );
-  // }
 
   const getImages = () =>{
     sendAjax('GET', '/images', null, (results) =>{
@@ -90,21 +85,26 @@ const PasswordWindow = (props) =>{
       //The URI's are stored properly in mongoose, however they're not being retrieved properly.  Instead of the + they're saved with
       //They're being retrieved with spaces.  Until I determine what's wrong, this code'll fix the problem.  Also only displaying the last saved img
       //to reduce clutter on screen
-      if (imageURLS.length > 0){
-        fixedURI = imageURLS[imageURLS.length-1].img.replace(/ /g, "+");
+      for (let i = 0; i < imageURLS.length; i++){
+        fixedURI[i] = imageURLS[i].img.replace(/ /g, "+");
       }
       createContent();
+      createPass();
       displayArt();
     });
   }
 
 const createContent = () => {
   ReactDOM.render(
-    <div>
-      <ConnectWindow/>
-      <PasswordWindow csrf={token}/>
-    </div>,
+    <ConnectWindow/>,
     document.querySelector("#profile")
+  );
+};
+
+const createPass = () =>{
+  ReactDOM.render(
+    <PasswordWindow csrf={token}/>,
+    document.querySelector("#change")
   );
 };
 

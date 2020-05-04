@@ -1,4 +1,4 @@
-const words = ['taco', 'burrito', 'Chili'];
+const words = ['taco', 'burrito', 'chili', 'house', 'sofa', 'running', 'mountain', 'mug', 'sponge', 'phone'];
 let drawer;
 
 const getRandomInt = (max) => {
@@ -47,6 +47,14 @@ const getWord = (req, res) => {
   res.json(value);
 };
 
+let ClearDrawer = (req, res) =>{
+  drawer="";
+  return res.json({
+    redirect: "/profile",
+  })
+}
 
+
+module.exports.clear = ClearDrawer;
 module.exports.checkWord = checkWord;
 module.exports.getWord = getWord;

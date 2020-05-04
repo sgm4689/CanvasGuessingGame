@@ -5,6 +5,7 @@ const router = (app) => {
   app.get('/getToken', mid.requiresSecure, controllers.Account.getToken);
   app.get('/login', mid.requiresSecure, mid.requiresLogout, controllers.Account.loginPage);
   app.post('/changePass', mid.requiresSecure, mid.requiresLogin, controllers.Account.changePass);
+  app.get('/clear', mid.requiresSecure, mid.requiresLogin, controllers.Words.clear);
   app.get('/images', mid.requiresLogin, controllers.Drawing.images);
   app.post('/img', mid.requiresLogin, controllers.Drawing.make);
   app.post('/word', mid.requiresLogin, controllers.Words.checkWord);

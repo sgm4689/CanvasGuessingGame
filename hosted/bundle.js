@@ -60,7 +60,6 @@ var getInfo = function getInfo() {
     word = result.Word;
     username = result.Username;
     if (result.Drawer === username) canDraw = true;else canDraw = false;
-    console.log(result.Drawer + " " + username);
     createCanvasWindow();
     init();
   });
@@ -68,11 +67,22 @@ var getInfo = function getInfo() {
 
 var checkWord = function checkWord(e) {
   e.preventDefault();
-  sendAjax('POST', '/word', "word=".concat(msg.value, "&_csrf=").concat(token), function (result) {
-    if (result.Correct) {
-      socket.emit('refresh', {}); //tell all other players someone guessed the answer
-    }
-  });
+
+  if (!drawer) {
+    sendAjax('GET', '/word', null, function (result) {
+      if (result.Correct) {
+        socket.emit('refresh', {}); //tell all other players someone guessed the answer
+      }
+    });
+  }
+};
+
+var handleDisconnect = function handleDisconnect(e) {
+  if (canDraw) {
+    socket.emit('refresh', {}); //Choose a new guesser
+  }
+
+  sendAjax('GET', '/clear', null, redirect);
 };
 
 var DrawingWindow = function DrawingWindow() {
@@ -98,6 +108,21 @@ var DisplayWindow = function DisplayWindow() {
       width: 700,
       height: 500,
       hidden: true
+    }))
+  );
+};
+
+var DisconnectWindow = function DisconnectWindow() {
+  return (/*#__PURE__*/React.createElement("form", {
+      id: "disconnectForm",
+      onSubmit: handleDisconnect,
+      name: "disconnectForm",
+      className: "disconnectForm"
+    }, /*#__PURE__*/React.createElement("input", {
+      id: "disconnect",
+      className: "formSubmit",
+      type: "submit",
+      value: "Leave"
     }))
   );
 };
@@ -211,7 +236,7 @@ var HasControls = function HasControls() {
     })), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("input", {
       id: "exportButton",
       type: "button",
-      value: "Export"
+      value: "Save"
     })))
   );
 };
@@ -316,8 +341,12 @@ var HideControls = function HideControls() {
 };
 
 var FormWindow = function FormWindow() {
-  return (/*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("ul", {
-      id: "messages"
+  return (/*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+      className: "answers",
+      id: "title"
+    }, "Your word is:"), /*#__PURE__*/React.createElement("ul", {
+      className: "answers",
+      id: "answer"
     }, word), /*#__PURE__*/React.createElement("form", {
       id: "answers",
       onSubmit: checkWord,
@@ -334,7 +363,7 @@ var FormWindow = function FormWindow() {
 };
 
 var createCanvasWindow = function createCanvasWindow() {
-  ReactDOM.render( /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(CanvasWindow, {
+  ReactDOM.render( /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(DisconnectWindow, null), /*#__PURE__*/React.createElement(CanvasWindow, {
     drawer: canDraw
   }), /*#__PURE__*/React.createElement(ControlWindow, {
     flag: canDraw
@@ -383,12 +412,10 @@ var init = function init() {
 
   document.querySelector('#toolChooser').onchange = function (e) {
     currentTool = e.target.value;
-    console.log("currentTool=" + currentTool);
   };
 
   document.querySelector('#fillStyleChooser').onchange = function (e) {
     fillStyle = e.target.value;
-    console.log("currentStyle=" + fillStyle);
   };
 };
 
@@ -503,7 +530,6 @@ var doMousemove = function doMousemove(e) {
     tool: currentTool
   };
   socket.emit('mouse', data);
-  console.log(data);
 };
 
 var MouseUp = function MouseUp(e, data) {
@@ -656,7 +682,8 @@ $(document).ready(function () {
 });
 "use strict";
 
-var token, imageURLS, fixedURI;
+var token, imageURLS;
+var fixedURI = [];
 
 var getToken = function getToken() {
   sendAjax('GET', '/getToken', null, function (result) {
@@ -667,7 +694,7 @@ var getToken = function getToken() {
 
 var handleConnect = function handleConnect(e) {
   e.preventDefault();
-  sendAjax('POST', '/connect', "id=".concat(msg.value, "&_csrf=").concat(token), redirect);
+  sendAjax('POST', '/connect', "_csrf=".concat(token), redirect);
 };
 
 var ConnectWindow = function ConnectWindow() {
@@ -677,11 +704,10 @@ var ConnectWindow = function ConnectWindow() {
       name: "connectForm",
       className: "connectForm"
     }, /*#__PURE__*/React.createElement("input", {
-      id: "msg"
-    }), /*#__PURE__*/React.createElement("input", {
       id: "connect",
+      className: "formSubmit",
       type: "submit",
-      value: "Enter"
+      value: "Join Lobby"
     }))
   );
 };
@@ -698,7 +724,7 @@ var handleChange = function handleChange(e) {
   }
 
   if ($("#pass").val() !== $("#pass2").val()) {
-    handleError("RAWR! Passwords do not match");
+    handleError("Passwords do not match");
     return false;
   }
 
@@ -720,21 +746,21 @@ var PasswordWindow = function PasswordWindow(props) {
       id: "oldPass",
       type: "password",
       name: "oldPass",
-      placeholder: "password"
+      placeholder: "Old password"
     }), /*#__PURE__*/React.createElement("label", {
       htmlFor: "pass"
-    }, "Password: "), /*#__PURE__*/React.createElement("input", {
+    }, "New Password: "), /*#__PURE__*/React.createElement("input", {
       id: "pass",
       type: "password",
       name: "pass",
-      placeholder: "password"
+      placeholder: "New password"
     }), /*#__PURE__*/React.createElement("label", {
       htmlFor: "pass2"
-    }, "Password: "), /*#__PURE__*/React.createElement("input", {
+    }, "New Password: "), /*#__PURE__*/React.createElement("input", {
       id: "pass2",
       type: "password",
       name: "pass2",
-      placeholder: "password"
+      placeholder: "New password"
     }), /*#__PURE__*/React.createElement("input", {
       type: "hidden",
       name: "_csrf",
@@ -748,20 +774,18 @@ var PasswordWindow = function PasswordWindow(props) {
 };
 
 var Images = function Images() {
-  return (/*#__PURE__*/React.createElement("img", {
-      src: fixedURI
-    })
+  return (/*#__PURE__*/React.createElement("div", {
+      className: "images"
+    }, fixedURI.map(function (value, index) {
+      return (/*#__PURE__*/React.createElement("img", {
+          key: index,
+          src: value,
+          className: "image"
+        })
+      );
+    }))
   );
-}; // const Images = () =>{
-//   return(
-//     <Carousel>
-//       {elements.map((value, index) => {
-//         return <Carousel.item><img src={value} key={index}></img></Carousel.item>
-//       })}
-//     </Carousel>
-//   );
-// }
-
+};
 
 var getImages = function getImages() {
   sendAjax('GET', '/images', null, function (results) {
@@ -769,19 +793,24 @@ var getImages = function getImages() {
     //They're being retrieved with spaces.  Until I determine what's wrong, this code'll fix the problem.  Also only displaying the last saved img
     //to reduce clutter on screen
 
-    if (imageURLS.length > 0) {
-      fixedURI = imageURLS[imageURLS.length - 1].img.replace(/ /g, "+");
+    for (var i = 0; i < imageURLS.length; i++) {
+      fixedURI[i] = imageURLS[i].img.replace(/ /g, "+");
     }
 
     createContent();
+    createPass();
     displayArt();
   });
 };
 
 var createContent = function createContent() {
-  ReactDOM.render( /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(ConnectWindow, null), /*#__PURE__*/React.createElement(PasswordWindow, {
+  ReactDOM.render( /*#__PURE__*/React.createElement(ConnectWindow, null), document.querySelector("#profile"));
+};
+
+var createPass = function createPass() {
+  ReactDOM.render( /*#__PURE__*/React.createElement(PasswordWindow, {
     csrf: token
-  })), document.querySelector("#profile"));
+  }), document.querySelector("#change"));
 };
 
 var displayArt = function displayArt() {
@@ -795,12 +824,7 @@ $(document).ready(function () {
 });
 "use strict";
 
-var handleError = function handleError(message) {
-  $("#errorMessage").text(message);
-  $("#domoMessage").animate({
-    width: 'toggle'
-  }, 350);
-};
+var handleError = function handleError(message) {};
 
 var redirect = function redirect(response) {
   $("#domoMessage").animate({
