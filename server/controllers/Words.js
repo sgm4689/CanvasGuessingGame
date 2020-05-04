@@ -47,12 +47,12 @@ const getWord = (req, res) => {
   res.json(value);
 };
 
-let ClearDrawer = (req, res) =>{
-  drawer="";
+const ClearDrawer = (req, res) => {
+  drawer = '';
   return res.json({
-    redirect: "/profile",
-  })
-}
+    redirect: '/profile',
+  });
+};
 
 
 module.exports.clear = ClearDrawer;

@@ -132,30 +132,31 @@ const changePass = (request, response) => {
 
   return Account.AccountModel.generateHash(
     req.body.pass,
-     (salt, hash) => Account.AccountModel.findById(req.session.account._id, (err, account) => {
-    account.salt = salt;
-    account.password = hash;
+    (salt, hash) => Account.AccountModel.findById(req.session.account._id, (err, account) => {
+      account.salt = salt;
+      account.password = hash;
 
-    const savePromise = account.save();
+      const savePromise = account.save();
 
-    savePromise.then(() => res.json({
-      redirect: 'profile',
-    }));
+      savePromise.then(() => res.json({
+        redirect: 'profile',
+      }));
 
-    savePromise.catch((error) => {
-      console.log(error);
+      savePromise.catch((error) => {
+        console.log(error);
 
-      if (err.code === 11000) {
+        if (err.code === 11000) {
+          return res.status(400).json({
+            error: 'Username already in use.',
+          });
+        }
+
         return res.status(400).json({
-          error: 'Username already in use.',
+          error: 'An error occured',
         });
-      }
-
-      return res.status(400).json({
-        error: 'An error occured',
       });
-    });
-  }));
+    }),
+  );
 };
 
 

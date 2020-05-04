@@ -70,7 +70,7 @@ const newConnection = (socket) => {
     io.sockets.emit('refresh', data);
   });
 
-  socket.on('disconnect', (data) => {
+  socket.on('disconnect', () => {
     console.log('user disconnected');
   });
 };
