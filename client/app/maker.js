@@ -70,8 +70,8 @@ const getInfo = () => {
 const checkWord = (e) => {
   e.preventDefault();
 
-  if (!drawer){
-    sendAjax('GET', '/word', null, (result) => {
+  if (!canDraw){
+    sendAjax('POST', '/word', `word=${msg.value}&_csrf=${token}`, (result) => {
       if (result.Correct){
         socket.emit('refresh', {});//tell all other players someone guessed the answer
       }

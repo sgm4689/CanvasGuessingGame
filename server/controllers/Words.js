@@ -10,6 +10,7 @@ const getRandomInt = (max) => {
 let word = words[getRandomInt(words.length)];
 
 const checkWord = (req, res) => {
+  console.log(req.body.words);
   if (req.body.word === word) {
     drawer = req.session.account.username;
     word = words[getRandomInt(words.length)];

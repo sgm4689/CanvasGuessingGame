@@ -68,8 +68,8 @@ var getInfo = function getInfo() {
 var checkWord = function checkWord(e) {
   e.preventDefault();
 
-  if (!drawer) {
-    sendAjax('GET', '/word', null, function (result) {
+  if (!canDraw) {
+    sendAjax('POST', '/word', "word=".concat(msg.value, "&_csrf=").concat(token), function (result) {
       if (result.Correct) {
         socket.emit('refresh', {}); //tell all other players someone guessed the answer
       }
